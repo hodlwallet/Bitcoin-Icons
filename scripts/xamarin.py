@@ -125,7 +125,7 @@ def create_ios_images():
             no_ext_filename = filename.replace(".svg", "").replace("-", "_")
 
             if ("svg/filled" in svg_file):
-                no_ext_filename = f"filled_{no_ext_filename}"
+                no_ext_filename = f"{no_ext_filename}_filled"
 
             png = os.path.join(ios, f"{no_ext_filename}.png")
             png_2x = os.path.join(ios, f"{no_ext_filename}@2x.png")
@@ -170,6 +170,9 @@ def create_android_images():
         for svg_file in progress:
             filename = os.path.basename(svg_file)
             no_ext_filename = filename.replace(".svg", "").replace("-", "_")
+
+            if ("svg/filled" in svg_file):
+                no_ext_filename = f"{no_ext_filename}_filled"
 
             drawable_png = os.path.join(drawable, f"{no_ext_filename}.png")
             hdpi_png = os.path.join(hdpi, f"{no_ext_filename}.png")
