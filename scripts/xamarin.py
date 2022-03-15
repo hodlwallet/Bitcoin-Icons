@@ -75,7 +75,7 @@ def copy_svg_to_xamarin():
     cp("-r", svg, xamarin)
 
 
-def replace_color_on_svgs(color_hex: str):
+def replace_color_on_svgs(fill_color_hex: str, stroke_color_hex):
     xamarin = get_xamarin_directory()
     svg_dir = path.join(xamarin, "svg")
 
@@ -86,7 +86,19 @@ def replace_color_on_svgs(color_hex: str):
         "-exec",
         "sed",
         "-i",
-        f's/fill="black"/fill="{color_hex}"/g',
+        f's/fill="black"/fill="{fill_color_hex}"/g',
+        "{}",
+        "+",
+    )
+
+    find(
+        svg_dir,
+        "-name",
+        "*.svg",
+        "-exec",
+        "sed",
+        "-i",
+        f's/stroke="black"/stroke="{stroke_color_hex}"/g',
         "{}",
         "+",
     )
@@ -111,6 +123,9 @@ def create_ios_images():
         for svg_file in progress:
             filename = os.path.basename(svg_file)
             no_ext_filename = filename.replace(".svg", "").replace("-", "_")
+
+            if ("svg/filled" in svg_file):
+                no_ext_filename = f"filled_{no_ext_filename}"
 
             png = os.path.join(ios, f"{no_ext_filename}.png")
             png_2x = os.path.join(ios, f"{no_ext_filename}@2x.png")
@@ -189,25 +204,28 @@ def cleanup():
         rm("-rf", xamarin)
 
 
-def generate_images(color: str):
+def generate_images(fill_color: str, stroke_color: str):
     root = get_root_directory()
-    color_hex = parse_color(color)
-    fg_color = "black" if color_too_bright(color) else "white"
-    comp_color = get_complementary_color(color_hex)
+
+    fill_color_hex = parse_color(fill_color)
+    stroke_color_hex = parse_color(stroke_color)
+
+    fg_color = "black" if color_too_bright(fill_color) else "white"
+    comp_color = get_complementary_color(fill_color_hex)
 
     echo("Color selected: ", nl=False)
 
     try:
-        secho(f"{color}", bg=color, fg=fg_color, nl=False)
+        secho(f"{fill_color}", bg=fill_color, fg=fg_color, nl=False)
     except TypeError:
-        echo(f"{color}", nl=False)
+        echo(f"{fill_color}", nl=False)
 
-    echo(f" ({color_hex}, complementary: {comp_color})")
+    echo(f" ({fill_color_hex}, complementary: {comp_color})")
     echo(f"Running on directory: {root}")
 
     cleanup()
     copy_svg_to_xamarin()
-    replace_color_on_svgs(color_hex)
+    replace_color_on_svgs(fill_color_hex, stroke_color_hex)
 
     echo("Creating iOS images please wait...")
     create_ios_images()
@@ -218,7 +236,7 @@ def generate_images(color: str):
     secho("done.", fg="green")
 
 
-def main(color: str = "black"):
+def main(fill_color: str = "black", stroke_color: str = "black"):
     """
     Generates all needed files for importing as png
     in a specific color, using inkscape and regexes
@@ -229,7 +247,7 @@ def main(color: str = "black"):
         fg="green",
     )
 
-    generate_images(color)
+    generate_images(fill_color, stroke_color)
 
 
 if __name__ == "__main__":
